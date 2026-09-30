@@ -1,0 +1,840 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TRACE</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --line: #dfe5eb;
+      --text: #182230;
+      --muted: #667085;
+      --accent: #0f766e;
+      --accent-dark: #115e59;
+      --danger: #b42318;
+      --warn: #b54708;
+      --ok: #15803d;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 14px;
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 24px auto 48px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: 28px; letter-spacing: 0; }
+    h2 { font-size: 18px; margin-bottom: 6px; }
+    h3 { font-size: 17px; margin-bottom: 8px; }
+    .muted { color: var(--muted); }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--danger);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+    }
+
+    .field { margin-top: 18px; }
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .drop {
+      border: 1px dashed #aeb8c4;
+      border-radius: 8px;
+      background: #f8fafc;
+      padding: 18px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .drop.over {
+      border-color: var(--accent);
+      background: #ecfdf3;
+    }
+
+    input[type="file"] { display: none; }
+
+    .file-name {
+      display: none;
+      margin-top: 8px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      word-break: break-all;
+    }
+
+    .file-name.show { display: block; }
+
+    .toggles {
+      display: grid;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .toggle-group-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      margin-top: 14px;
+      margin-bottom: 4px;
+    }
+
+    .toggle {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .toggle input { margin-top: 2px; flex-shrink: 0; }
+
+    .toggle.disabled-toggle {
+      opacity: .55;
+      background: #f8fafc;
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    .tag-free { background: #dcfce7; color: #15803d; }
+    .tag-key  { background: #fef9c3; color: #854d0e; }
+    .tag-off  { background: #f1f5f9; color: #64748b; }
+
+    button {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 700;
+      padding: 10px 12px;
+    }
+
+    button.primary {
+      width: 100%;
+      margin-top: 18px;
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    button.primary:hover { background: var(--accent-dark); }
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .55;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfcfd;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .metric strong { font-size: 24px; }
+
+    .filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 12px 0;
+    }
+
+    .filters button.active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f8fafc;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+    .path, .hash { color: var(--muted); font-family: Consolas, monospace; font-size: 12px; }
+
+    .badge {
+      display: inline-block;
+      border-radius: 6px;
+      padding: 3px 7px;
+      font-weight: 700;
+      font-size: 12px;
+      background: #eef2f6;
+    }
+
+    .critical { color: var(--danger); }
+    .high { color: var(--warn); }
+    .medium { color: var(--ok); }
+    .info { color: var(--accent); }
+
+    .intel-pills { display: flex; flex-direction: column; gap: 3px; }
+    .pill {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 5px;
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      white-space: nowrap;
+    }
+    .pill.confirmed { background: #fee2e2; border-color: #fca5a5; color: var(--danger); font-weight: 700; }
+    .pill.likely    { background: #ffedd5; border-color: #fdba74; color: var(--warn); }
+    .pill.clean     { background: #dcfce7; border-color: #86efac; color: var(--ok); }
+    .pill.found     { background: #dbeafe; border-color: #93c5fd; color: #1d4ed8; }
+
+    .empty {
+      min-height: 330px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .hidden { display: none; }
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      max-width: 420px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 12px 14px;
+      box-shadow: 0 12px 30px rgba(16, 24, 40, .12);
+    }
+
+
+    /* Expandable row detail panel */
+    .truncated { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
+    .truncated.name   { max-width: 180px; font-weight: 700; }
+    .truncated.path   { max-width: 220px; font-family: Consolas, monospace; font-size: 12px; color: var(--muted); }
+    .truncated.reason { max-width: 260px; }
+
+    tr.expandable { cursor: pointer; }
+    tr.expandable:hover { background: #f8fafc; }
+    tr.details-row { display: none; }
+    tr.details-row.open { display: table-row; }
+
+    .details-content {
+      padding: 20px;
+      background: #f8fafc;
+      border-top: 2px solid var(--accent);
+    }
+    .threat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .threat-card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .threat-card h3 {
+      margin: 0 0 10px 0;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      border-bottom: 2px solid var(--line);
+      padding-bottom: 7px;
+    }
+    .threat-item { margin: 6px 0; font-size: 13px; line-height: 1.5; }
+    .threat-item strong { color: var(--text); display: inline-block; min-width: 90px; }
+    .threat-item .value { color: var(--muted); word-break: break-word; }
+    .close-details { float: right; cursor: pointer; font-size: 20px; color: var(--muted); font-weight: bold; }
+    .close-details:hover { color: var(--text); }
+    @media (max-width: 850px) {
+      .layout { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+      header { align-items: flex-start; gap: 12px; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div>
+        <h1>TRACE</h1>
+        <p class="muted">Amcache, Prefetch, and ShimCache analysis</p>
+      </div>
+      <div class="status"><span class="dot" id="statusDot"></span><span id="statusText">Checking server</span></div>
+    </header>
+
+    <div class="layout">
+      <section class="panel">
+        <h2>New Analysis</h2>
+        <p class="muted">Upload CSV exports from Eric Zimmerman's tools. At least one is required.</p>
+
+        <div class="field">
+          <label for="amcacheInput">Amcache</label>
+          <div class="drop" data-slot="amcache">Enter the Amcache .csv file</div>
+          <input id="amcacheInput" type="file" accept=".csv">
+          <div id="amcacheName" class="file-name"></div>
+        </div>
+
+        <div class="field">
+          <label for="prefetchInput">Prefetch</label>
+          <div class="drop" data-slot="prefetch">Enter the Prefetch .csv file</div>
+          <input id="prefetchInput" type="file" accept=".csv">
+          <div id="prefetchName" class="file-name"></div>
+        </div>
+
+        <div class="field">
+          <label for="shimcacheInput">ShimCache</label>
+          <div class="drop" data-slot="shimcache">Enter the ShimCache .csv file</div>
+          <input id="shimcacheInput" type="file" accept=".csv">
+          <div id="shimcacheName" class="file-name"></div>
+        </div>
+        
+        <button id="runBtn" class="primary" disabled>Run Analysis</button>
+      </section>
+
+      <section class="panel">
+        <div id="empty" class="empty">
+          <div>
+            <h3>Ready for an artifact</h3>
+            <p>Upload an artifact to start.</p>
+          </div>
+        </div>
+
+        <div id="loading" class="empty hidden">
+          <div>
+            <h3>Running analysis</h3>
+            <p>The report will appear here when the backend finishes.</p>
+          </div>
+        </div>
+
+        <div id="results" class="hidden">
+          <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
+            <div>
+              <h3>Analysis Complete</h3>
+              <p id="meta" class="muted"></p>
+            </div>
+            <div class="actions">
+              <button id="exportBtn">Download CSV</button>
+              <button id="reportBtn">Download PDF</button>
+            </div>
+          </div>
+
+          <div class="metrics">
+            <div class="metric"><span>Total entries</span><strong id="total">0</strong></div>
+            <div class="metric"><span>Flagged</span><strong id="flagged">0</strong></div>
+            <div class="metric"><span>Critical / High</span><strong id="criticalHigh">0</strong></div>
+            <div class="metric"><span>Clean</span><strong id="clean">0</strong></div>
+          </div>
+
+          <div class="filters">
+            <button class="active" data-filter="all">All</button>
+            <button data-filter="critical">Critical</button>
+            <button data-filter="high">High</button>
+            <button data-filter="medium">Medium</button>
+            <button data-filter="info">Info</button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Path</th>
+                  <th>Reason</th>
+                  <th>MITRE</th>
+                  <th>Threat Intel</th>
+                  <th>Score</th>
+                </tr>
+              </thead>
+              <tbody id="findingsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script>
+    const files = { amcache: null, prefetch: null, shimcache: null };
+    const inputs = {
+      amcache: document.getElementById("amcacheInput"),
+      prefetch: document.getElementById("prefetchInput"),
+      shimcache: document.getElementById("shimcacheInput")
+    };
+    const labels = {
+      amcache: document.getElementById("amcacheName"),
+      prefetch: document.getElementById("prefetchName"),
+      shimcache: document.getElementById("shimcacheName")
+    };
+
+    let findings = [];
+    let reportId = "";
+    let serverConfig = {};
+
+    function setView(name) {
+      ["empty", "loading", "results"].forEach(id => {
+        document.getElementById(id).classList.toggle("hidden", id !== name);
+      });
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.remove("hidden");
+      window.setTimeout(() => toast.classList.add("hidden"), 4200);
+    }
+
+    // TRACE accepts only CSV exports. The analyst must parse raw Amcache,
+    // Prefetch, and ShimCache artifacts with the matching Eric Zimmerman tool
+    // before upload; TRACE never performs that conversion on the server.
+    const ACCEPTED = {
+      amcache:   "Amcache must be a .csv exported by AmcacheParser.",
+      prefetch:  "Prefetch must be a .csv exported by PECmd.",
+      shimcache: "ShimCache must be a .csv exported by AppCompatCacheParser.",
+    };
+
+    function selectFile(slot, file) {
+      if (!file.name.toLowerCase().endsWith(".csv")) {
+        showToast(ACCEPTED[slot] || "Please choose a .csv file.", true);
+        return;
+      }
+      files[slot] = file;
+      labels[slot].textContent = `${file.name} (${Math.ceil(file.size / 1024)} KB)`;
+      labels[slot].classList.add("show");
+      // Enable button if at least one file is selected
+      document.getElementById("runBtn").disabled = !files.amcache && !files.prefetch && !files.shimcache;
+    }
+
+    document.querySelectorAll(".drop").forEach(drop => {
+      const slot = drop.dataset.slot;
+      drop.addEventListener("click", () => inputs[slot].click());
+      drop.addEventListener("dragover", event => { event.preventDefault(); drop.classList.add("over"); });
+      drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+      drop.addEventListener("drop", event => {
+        event.preventDefault();
+        drop.classList.remove("over");
+        const file = event.dataTransfer.files[0];
+        if (file) selectFile(slot, file);
+      });
+    });
+
+    Object.entries(inputs).forEach(([slot, input]) => {
+      input.addEventListener("change", event => {
+        const file = event.target.files[0];
+        if (file) selectFile(slot, file);
+      });
+    });
+
+    async function checkHealth() {
+      try {
+        // no-store: a cached /health hides the server's real state.
+        const response = await fetch("/health", { cache: "no-store" });
+        const data = await response.json();
+        serverConfig = data.config || {};
+        document.getElementById("statusText").textContent =
+          "Online";
+        document.getElementById("statusDot").style.background = "var(--ok)";
+        applyServerConfig(serverConfig);
+      } catch {
+        document.getElementById("statusText").textContent = "Offline";
+        document.getElementById("statusDot").style.background = "var(--danger)";
+      }
+    }
+
+    // Disable any threat-intel toggle whose API key is not configured on the
+    // server. Never auto-check a toggle - the analyst opts in explicitly,
+    // because each enabled source costs API quota and processing time.
+    // Threat-intel sources always run; a source without an API key simply
+    // returns nothing. Rather than offering switches, tell the analyst which
+    // sources will actually contribute to this run.
+    function applyServerConfig(cfg) {
+      const configured = cfg.threat_intel_keys_configured || {};
+      const missing = [];
+
+      [["virustotal", "tiStatusVt", "VT_API_KEY"],
+       ["metadefender", "tiStatusMd", "METADEFENDER_API_KEY"],
+       ["otx", "tiStatusOtx", "OTX_API_KEY"]].forEach(([key, elementId, envName]) => {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+        if (configured[key]) {
+          element.style.opacity = "1";
+          element.style.textDecoration = "none";
+        } else {
+          element.style.opacity = "0.45";
+          element.style.textDecoration = "line-through";
+          missing.push(envName);
+        }
+      });
+
+      const warning = document.getElementById("tiKeyWarning");
+      if (warning) {
+        warning.textContent = missing.length
+          ? `No API key set for: ${missing.join(", ")} - those sources will be skipped.`
+          : "";
+      }
+    }
+
+    function moduleEnabled(id) {
+      return document.getElementById(id).checked;
+    }
+    // Click handler (CLICK Analyze button)
+    document.getElementById("runBtn").addEventListener("click", async () => {
+      // Require at least one CSV file
+      if (!files.amcache && !files.prefetch && !files.shimcache) {
+        showToast("Upload at least one CSV export (Amcache, Prefetch or ShimCache).", true);
+        return;
+      }
+      const form = new FormData();
+      if (files.amcache) form.append("amcache", files.amcache);
+      if (files.prefetch) form.append("prefetch", files.prefetch);
+      if (files.shimcache) form.append("shimcache", files.shimcache);
+      // No analysis options to send - threat intel, correlation and MITRE
+      // mapping always run. Only case metadata is optional.
+
+      document.getElementById("runBtn").disabled = true;
+      setView("loading");
+
+      try {
+        // POST the files to the backend for analysis. The backend returns a JSON
+        const response = await fetch("/analyze", { method: "POST", body: form });
+        if (!response.ok) {
+          let detail = `Server returned ${response.status}`;
+          try { const err = await response.json(); if (err.detail) detail = err.detail; } catch {}
+          throw new Error(detail);
+        }
+        renderResults(await response.json());
+      } catch (error) {
+        setView("empty");
+        showToast(`Analysis failed: ${error.message || error}`);
+      } finally {
+        document.getElementById("runBtn").disabled = !files.amcache;
+      }
+    });
+
+    function renderResults(data) {
+      reportId = data.report_id;
+      findings = data.findings || [];
+
+      document.getElementById("total").textContent        = data.total_entries;
+      document.getElementById("flagged").textContent      = data.flagged_count;
+      document.getElementById("criticalHigh").textContent = data.critical_high_count;
+      document.getElementById("clean").textContent        = data.clean_count;
+      document.getElementById("meta").textContent =
+        `${data.processing_seconds.toFixed(2)} seconds`;
+
+      setActiveFilter("all");
+      renderTable(findings);
+      setView("results");
+    }
+
+    function setActiveFilter(value) {
+      document.querySelectorAll(".filters button").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.filter === value);
+      });
+    }
+
+    document.querySelectorAll(".filters button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const filter = btn.dataset.filter;
+        setActiveFilter(filter);
+        renderTable(filter === "all" ? findings : findings.filter(f =>
+          (f.severity || "INFO").toLowerCase() === filter
+        ));
+      });
+    });
+
+    function intelPills(f) {
+      const pills = [];
+
+      // VirusTotal
+      if (f.vt_checked) {
+        const label = f.vt_verdict_label || "UNKNOWN";
+        const ratio = f.vt_total_engines ? `${f.vt_detections}/${f.vt_total_engines}` : "";
+        if (label === "CONFIRMED_MALWARE")
+          pills.push(`<span class="pill confirmed">VT ${ratio} — Confirmed</span>`);
+        else if (label === "LIKELY_MALWARE")
+          pills.push(`<span class="pill likely">VT ${ratio} — Likely malware</span>`);
+        else if (f.vt_found)
+          pills.push(`<span class="pill clean">VT ${ratio} — Clean</span>`);
+        else
+          pills.push(`<span class="pill">VT — Not found</span>`);
+      }
+
+      // OTX
+      if (f.otx_checked) {
+        const pc = f.otx_pulse_count || 0;
+        pills.push(pc > 0
+          ? `<span class="pill likely">OTX ${pc} pulse${pc !== 1 ? "s" : ""}</span>`
+          : `<span class="pill clean">OTX clean</span>`);
+      }
+
+      // MetaDefender
+      if (f.md_checked) {
+        const label = f.md_verdict_label || "UNKNOWN";
+        const ratio = f.md_total_engines ? `${f.md_detections}/${f.md_total_engines}` : "";
+        if (label === "CONFIRMED_MALWARE")
+          pills.push(`<span class="pill confirmed">MD ${ratio} — Confirmed</span>`);
+        else if (label === "LIKELY_MALWARE")
+          pills.push(`<span class="pill likely">MD ${ratio} — Likely malware</span>`);
+        else if (f.md_found)
+          pills.push(`<span class="pill clean">MD ${ratio} — Clean</span>`);
+        else
+          pills.push(`<span class="pill">MD — Not found</span>`);
+      }
+
+      // MalwareBazaar
+      return pills.length
+        ? `<div class="intel-pills">${pills.join("")}</div>`
+        : `<span class="muted">—</span>`;
+    }
+
+    function renderTable(rows) {
+      const body = document.getElementById("findingsBody");
+      if (!rows.length) {
+        body.innerHTML = `<tr><td colspan="6" class="muted">No suspicious findings to show.</td></tr>`;
+        return;
+      }
+      let html = "";
+      rows.forEach((f, idx) => {
+        const severity     = (f.severity || "INFO").toLowerCase();
+        const mitre        = (f.mitre || []).map(t => t.id).join(", ") || "-";
+        const justification = escapeHtml(f.justification || "(no reasoning returned by the model)");
+        const fullPath     = escapeHtml(f.full_path || "-");
+        const fileName     = escapeHtml(f.name || "-");
+        const shortHash    = escapeHtml((f.sha1 || "").slice(0, 20));
+        const rowId        = `row-${idx}`;
+
+        // Clickable summary row
+        html += `
+          <tr class="expandable" onclick="toggleDetails('${rowId}')">
+            <td><span class="truncated name" title="${fileName}"><strong>${fileName}</strong></span><div class="hash">${shortHash}</div></td>
+            <td><span class="truncated path" title="${fullPath}">${fullPath}</span></td>
+            <td><span class="truncated reason" title="${justification}">${justification}</span></td>
+            <td>${escapeHtml(mitre)}</td>
+            <td>${intelPills(f)}</td>
+            <td><span class="badge ${severity}">${Number(f.risk_score || 0).toFixed(1)}</span></td>
+          </tr>`;
+
+        // Hidden detail row — shown on click
+        html += `
+          <tr class="details-row" id="${rowId}">
+            <td colspan="6">
+              <div class="details-content">
+                <span class="close-details" onclick="toggleDetails('${rowId}'); event.stopPropagation();">×</span>
+                <h2 style="margin-top:0;">${fileName}</h2>
+                <p class="muted path" style="margin-bottom:8px;">${fullPath}</p>
+                ${renderThreatDetails(f)}
+              </div>
+            </td>
+          </tr>`;
+      });
+      body.innerHTML = html;
+    }
+
+    function toggleDetails(rowId) {
+      document.getElementById(rowId).classList.toggle("open");
+    }
+
+    function renderThreatDetails(f) {
+      let h = '<div class="threat-grid">';
+
+      // AI Detection - shows both passes so the analyst can see how the
+      // verdict changed once threat-intel evidence was supplied.
+      const initialScore = Number(f.initial_score || 0);
+      const finalScore   = Number(f.risk_score || 0);
+      h += `<div class="threat-card">
+        <h3>AI Detection</h3>
+        <div class="threat-item"><strong>Pass 1 (metadata only):</strong>
+          <span class="value">${initialScore > 0 ? initialScore.toFixed(1) + " / 10"
+            : "not flagged - reviewed because threat intel reported detections"}</span></div>
+        <div class="threat-item"><strong>Final score:</strong>
+          <span class="value">${finalScore.toFixed(1)} / 10 (${escapeHtml(f.severity || "-")})</span></div>
+        <div class="threat-item"><strong>Reasoning:</strong>
+          <span class="value">${escapeHtml(f.justification || "(no reasoning returned by the model)")}</span></div>
+        ${f.score_explanation ? `<div class="threat-item"><strong>How this score was set:</strong>
+          <span class="value">${escapeHtml(f.score_explanation)}</span></div>` : ""}
+      </div>`;
+
+      // Execution evidence from cross-artifact correlation.
+      const sources = f.seen_in_sources || [];
+      if (sources.length || f.execution_confirmed) {
+        h += `<div class="threat-card">
+          <h3>Execution Evidence</h3>
+          <div class="threat-item"><strong>Seen in:</strong>
+            <span class="value">${escapeHtml(sources.join(", ") || "-")}</span></div>
+          <div class="threat-item"><strong>Execution proven:</strong>
+            <span class="value">${f.execution_confirmed ? "YES" : "no - presence on disk only"}</span></div>
+          ${f.run_count ? `<div class="threat-item"><strong>Run count:</strong>
+            <span class="value">${f.run_count}</span></div>` : ""}
+        </div>`;
+      }
+
+      // VirusTotal
+      if (f.vt_checked) {
+        h += `<div class="threat-card">
+          <h3>VirusTotal</h3>
+          <div class="threat-item"><strong>Status:</strong> <span class="value">${f.vt_found ? "Found" : "Not found"}</span></div>
+          <div class="threat-item"><strong>Detections:</strong> <span class="value">${f.vt_detections} / ${f.vt_total_engines}</span></div>
+          ${f.vt_malware_family    ? `<div class="threat-item"><strong>Family:</strong>   <span class="value">${escapeHtml(f.vt_malware_family)}</span></div>` : ""}
+          ${f.vt_popular_threat_category ? `<div class="threat-item"><strong>Category:</strong> <span class="value">${escapeHtml(f.vt_popular_threat_category)}</span></div>` : ""}
+          ${f.vt_verdict_label    ? `<div class="threat-item"><strong>Verdict:</strong>  <span class="value">${escapeHtml(f.vt_verdict_label)}</span></div>` : ""}
+          ${f.vt_first_seen       ? `<div class="threat-item"><strong>First seen:</strong> <span class="value">${escapeHtml(f.vt_first_seen)}</span></div>` : ""}
+          ${f.vt_last_seen        ? `<div class="threat-item"><strong>Last seen:</strong>  <span class="value">${escapeHtml(f.vt_last_seen)}</span></div>` : ""}
+          ${f.vt_type_tags && f.vt_type_tags.length ? `<div class="threat-item"><strong>Tags:</strong> <span class="value">${f.vt_type_tags.join(", ")}</span></div>` : ""}
+        </div>`;
+      }
+
+      // MetaDefender
+      if (f.md_checked) {
+        h += `<div class="threat-card">
+          <h3>MetaDefender</h3>
+          <div class="threat-item"><strong>Status:</strong>     <span class="value">${f.md_found ? "Found" : "Not found"}</span></div>
+          <div class="threat-item"><strong>Detections:</strong> <span class="value">${f.md_detections} / ${f.md_total_engines}</span></div>
+          ${f.md_threat       ? `<div class="threat-item"><strong>Threat:</strong>   <span class="value">${escapeHtml(f.md_threat)}</span></div>` : ""}
+          ${f.md_verdict_label ? `<div class="threat-item"><strong>Verdict:</strong>  <span class="value">${escapeHtml(f.md_verdict_label)}</span></div>` : ""}
+          ${f.md_scan_date    ? `<div class="threat-item"><strong>Scan date:</strong> <span class="value">${escapeHtml(f.md_scan_date)}</span></div>` : ""}
+        </div>`;
+      }
+
+      // AlienVault OTX
+      if (f.otx_checked) {
+        h += `<div class="threat-card">
+          <h3>AlienVault OTX</h3>
+          <div class="threat-item"><strong>Pulses:</strong> <span class="value">${f.otx_pulse_count || 0}</span></div>
+          ${f.otx_threat_labels && f.otx_threat_labels.length    ? `<div class="threat-item"><strong>Labels:</strong>   <span class="value">${f.otx_threat_labels.join(", ")}</span></div>` : ""}
+          ${f.otx_malware_families && f.otx_malware_families.length ? `<div class="threat-item"><strong>Families:</strong> <span class="value">${f.otx_malware_families.join(", ")}</span></div>` : ""}
+          ${f.otx_tags && f.otx_tags.length ? `<div class="threat-item"><strong>Tags:</strong> <span class="value">${f.otx_tags.join(", ")}</span></div>` : ""}
+        </div>`;
+      }
+
+      // MITRE ATT&CK
+      if (f.mitre && f.mitre.length) {
+        h += `<div class="threat-card"><h3>MITRE ATT&CK</h3>`;
+        f.mitre.forEach(t => {
+          h += `<div class="threat-item"><strong>${escapeHtml(t.id)}:</strong> <span class="value">${escapeHtml(t.name)}${t.tactic ? " (" + escapeHtml(t.tactic) + ")" : ""}</span></div>`;
+        });
+        h += `</div>`;
+      }
+
+      h += `</div>`;
+      return h;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    document.getElementById("exportBtn").addEventListener("click", () => {
+      if (reportId) window.open(`/export/${reportId}`, "_blank");
+    });
+    document.getElementById("reportBtn").addEventListener("click", () => {
+      if (reportId) window.open(`/report/${reportId}`, "_blank");
+    });
+
+    checkHealth();
+  </script>
+</body>
+</html>
